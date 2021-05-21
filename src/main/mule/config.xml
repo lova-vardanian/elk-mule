@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:spring="http://www.mulesoft.org/schema/mule/spring" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="e4c0c2b8-efec-4133-98f6-4278012d4b9e" file="${env}.properties" />
+	<global-property doc:name="Global Property" doc:id="4518acfc-f265-4a13-841f-8f39047ac285" name="env" value="dev" />
+	<db:config name="PostgreSQL_dataSource_config" doc:name="Database Config" doc:id="743c60ba-d2f5-42c1-a877-6af367332763" >
+		<db:data-source-connection dataSourceRef="postgreDataSource" />
+	</db:config>
+	<spring:config name="Spring_Config" doc:name="Spring Config" doc:id="6ab394f2-86c5-4bbe-8f2c-1f663e59f00d" files="spring-init-bean.xml" />
+</mule>
