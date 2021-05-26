@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<sub-flow name="database.PERSON-select-all" doc:id="14b4c836-000d-4c55-ae16-e9f040658953" >
+		<db:select doc:name="all records" doc:id="ab0b9f0e-f383-4e75-a85f-b40b05ec6ce0" config-ref="PostgreSQL_dataSource_config">
+			<db:sql ><![CDATA[SELECT * 
+FROM PERSON]]></db:sql>
+		</db:select>
+		<set-payload value="#[output application/json&#10;---&#10;payload]" doc:name="to json" doc:id="ad079bfd-c8c9-4d03-a1f9-0a70936c1fd4" />
+	</sub-flow>
+	<sub-flow name="database.PERSON-select-by-personID" doc:id="3b145cbc-2d69-43a5-acfd-8b674281103e" >
+		<db:select doc:name="person record" doc:id="4ee2ebfd-306a-470f-9e55-800ac7abc530" config-ref="PostgreSQL_dataSource_config" >
+			<db:sql ><![CDATA[SELECT * 
+FROM PERSON
+WHERE id = :personID]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{ 'personID': vars.personID }]]]></db:input-parameters>
+		</db:select>
+		<set-payload value="#[output application/json&#10;---&#10;payload]" doc:name="to json" doc:id="518cf24d-8cab-4475-87dd-b88dd1d95947" />
+	</sub-flow>
+	<sub-flow name="database.PERSON_NONIMMIGRANT_VISA_CATEGORIES-select-by-personID-visaID" doc:id="27743941-b2d5-4316-b0cf-8ed68e7d79a4" >
+		<db:select doc:name="person record" doc:id="d242a20f-e312-427d-9610-4fe7222e6740" config-ref="PostgreSQL_dataSource_config" >
+			<db:sql ><![CDATA[SELECT * 
+FROM PERSON_NONIMMIGRANT_VISA_CATEGORIES 
+WHERE person_id = :personID and category_id = :categoryID]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{ 'personID': vars.personID, 'categoryID': vars.visaID }]]]></db:input-parameters>
+		</db:select>
+		<set-payload value="#[output application/json&#10;---&#10;payload]" doc:name="to json" doc:id="a7360743-3b68-4148-97a6-0957eaf20631" />
+	</sub-flow>
+	<sub-flow name="database.PERSON_NONIMMIGRANT_VISA_CATEGORIES-insert" doc:id="7763fccb-6486-4af1-8075-8ac63a0f0d98" >
+		<db:insert doc:name="new record" doc:id="b145ccfa-b7f1-47a8-9248-950ebe5a655d" config-ref="PostgreSQL_dataSource_config">
+			<db:sql ><![CDATA[INSERT INTO PERSON_NONIMMIGRANT_VISA_CATEGORIES (PERSON_ID,CATEGORY_ID,START_DATE,END_DATE,STATUS) 
+VALUES (:personID, :categoryID, :startDate, :endDate, :status);]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{ 'personID': vars.personID, 'categoryID': vars.visaID, 'startDate': payload.startDate, 'endDate': payload.endDate, 'status': payload.status }]]]></db:input-parameters>
+		</db:insert>
+		<set-payload value="#[output application/json&#10;---&#10;payload]" doc:name="to json" doc:id="f9d0d1ee-d13a-4ebd-bbf4-b12b4d20b457" />
+	</sub-flow>
+	<sub-flow name="database.PERSON-insert" doc:id="a6b56327-c1a8-4429-94d8-d7e639f88eec">
+		<db:insert doc:name="new record" doc:id="7fe5f3ac-530c-41b0-81a2-876e81feb0e0" config-ref="PostgreSQL_dataSource_config">
+			<db:sql><![CDATA[INSERT INTO PERSON (ID,NAME,LASTNAME,AGE,COUNTRY) 
+VALUES (:personID, :name, :lastname, :age, :country);]]></db:sql>
+			<db:input-parameters><![CDATA[#[{ 'personID': payload.id, 'name': payload.name, 'lastname': payload.lastname, 'age': payload.age, 'country': payload.country }]]]></db:input-parameters>
+		</db:insert>
+		<set-payload value="#[output application/json&#10;---&#10;payload]" doc:name="to json" doc:id="ee61f536-4323-4c01-9e1a-573da72bb80d" />
+	</sub-flow>
+	<sub-flow name="database.NON_IMMIGRANT_VISA_CATEGORIES-select-by-categoryID" doc:id="a5e0f5d7-b4bc-47b6-b928-d73b9d00bd27" >
+		<db:select doc:name="visa record" doc:id="26acc919-38d4-4ea4-aa9d-f8b28118df41" config-ref="PostgreSQL_dataSource_config">
+			<db:sql ><![CDATA[SELECT * 
+FROM NON_IMMIGRANT_VISA_CATEGORIES
+WHERE CATEGORY_ID = :categoryID]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{ 'categoryID': vars.visaID }]]]></db:input-parameters>
+		</db:select>
+		<set-payload value="#[output application/json&#10;---&#10;payload]" doc:name="to json" doc:id="e658b052-0620-40c5-85c6-10c500a07d66" />
+	</sub-flow>
+</mule>

@@ -1,0 +1,43 @@
+#%RAML 1.0
+title: elk-mule
+version: 1.0
+
+uses:
+  tr: libraries/traits_lib.raml
+  
+/person:
+  post:
+    displayName: Creat new person
+
+    is: [tr.access_token, tr.common_error_responses]
+    body:
+      application/json:
+    responses:
+      200:
+  
+  /{personID}:
+    get:
+      displayName: Return person information
+      is: [tr.access_token, tr.common_error_responses]
+      responses:
+        200:
+
+  /{personID}/visa:
+    post:      
+      displayName: Return a list of visas information for person
+      is: [tr.access_token, tr.common_error_responses]
+      body:
+        application/json:
+      responses:
+        200:
+          body:
+            application/json:
+
+  /{personID}/visa/{visaID}:
+    get:      
+      displayName: Return visa information for person
+      is: [tr.access_token, tr.common_error_responses]
+      responses:
+        200:
+          body:
+            application/json:

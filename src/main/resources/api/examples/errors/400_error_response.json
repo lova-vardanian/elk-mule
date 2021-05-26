@@ -1,0 +1,8 @@
+{
+  "status": "400",
+  "code": "BAD_REQUEST",
+  "title": "Invalid Query Parameter",
+  "detail": {
+    "error": "The resource does not have an `author` relationship path"
+  }
+}

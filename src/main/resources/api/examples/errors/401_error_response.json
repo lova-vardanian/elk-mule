@@ -1,0 +1,8 @@
+{
+  "status": "401",
+  "code": "Unauthorized",
+  "title": "Invalid access_token",
+  "detail": {
+    "error": "The resource does not have an `access_token` valid token header "
+  }
+}

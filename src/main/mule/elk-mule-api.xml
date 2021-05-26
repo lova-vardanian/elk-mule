@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+    <apikit:config name="elk-mule-config" api="elk-mule.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+	<flow name="elk-mule-main">
+        <http:listener path="/api/*" config-ref="HTTP_Listener_config">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[error.description]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="elk-mule-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="elk-mule-console">
+        <http:listener path="/console/*" config-ref="HTTP_Listener_config">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="elk-mule-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\person\(personID):elk-mule-config">
+        <set-variable value="#[attributes.uriParams.'personID']" doc:name="personID" doc:id="86c523dd-3df2-40f7-9be2-22839135fbd5" variableName="personID" />
+        <flow-ref doc:name="person-validation" doc:id="1e3716b4-956b-4bb2-a5d1-2ac1d18e57ef" name="person-by-personID-not-empty-validation" />
+    </flow>
+    <flow name="get:\person\(personID)\visa\(visaID):elk-mule-config">
+        <set-variable value="#[attributes.uriParams.'personID']" doc:name="personID" doc:id="9c16dd0d-8611-4ad0-a19b-bd830ccaf95b" variableName="personID" />
+        <set-variable value="#[attributes.uriParams.'visaID']" doc:name="visaID" doc:id="377f7261-3939-41f3-a23b-dabca589f36f" variableName="visaID" />
+        <flow-ref doc:name="person-validation" doc:id="4e80d8e2-865e-4bc8-9378-da7e7948c924" name="person-by-personID-not-empty-validation" />
+        <flow-ref doc:name="visa-validation" doc:id="e2687ff5-ec31-49a4-b021-3d03605e62d3" name="visa-by-personID-visaID-not-empty-validation" />
+    </flow>
+    <flow name="post:\person:application\json:elk-mule-config">
+        <set-variable value="#[payload.'id']" doc:name="personID" doc:id="6bfea7ec-da84-4243-ad9e-296b90d6b6dd" variableName="personID" />
+        <set-variable value="#[payload]" doc:name="personPayload" doc:id="e71dd3fa-3113-46cb-881d-212bf1cbb454" variableName="personPayload"/>
+		<flow-ref doc:name="person-validation" doc:id="cdb9653b-03ab-4532-9c21-6f4e0e1322be" name="person-by-personID-empty-validation" />
+        <set-payload value="#[vars.personPayload]" doc:name="personPayload" doc:id="1df5dccc-8f44-45de-9e26-ba95cfb877b3" />
+		<flow-ref doc:name="insert new porson" doc:id="ba7ea407-47d3-4673-aa23-43a091bd3bb9" name="database.PERSON-insert" />
+		<set-payload value='#[output application/json --- { "status": "new record was successfully created" }]' doc:name="response message" doc:id="e6ca4688-a052-4b03-a688-7641f1fc3723" />
+    </flow>
+    <flow name="post:\person\(personID)\visa:application\json:elk-mule-config">
+        <set-variable value="#[payload.'personID']" doc:name="personID" doc:id="7b75b2ce-fb5a-4e3f-bd5a-8fcc3b8ab42c" variableName="personID" />
+        <set-variable value="#[payload.'categoryID']" doc:name="visaID" doc:id="3a3a06a6-e9f6-4d86-8dc4-4feaede1193e" variableName="visaID" />
+        <set-variable value="#[payload]" doc:name="personPayload" doc:id="fa599163-4a7a-4628-a0fb-1504fb7a6818" variableName="personPayload"/>
+		<flow-ref doc:name="person-validation" doc:id="3f191d8f-19ee-4bef-a93f-26a23851f15a" name="person-by-personID-not-empty-validation" />
+        <flow-ref doc:name="visa-validation" doc:id="8b1b4b4b-45db-485c-96ef-00c431828318" name="visa-by-personID-not-empty-validation" />
+        <set-payload value="#[vars.personPayload]" doc:name="personPayload" doc:id="0533677b-71f1-4bf6-8cbf-134f2ca6a82f" />
+		<flow-ref doc:name="insert new visa for person" doc:id="7bdfe7a1-1378-4ad9-8b53-9adf56ba8939" name="database.PERSON_NONIMMIGRANT_VISA_CATEGORIES-select-by-personID-visaID" />
+		<set-payload value='#[output application/json --- { "status": "new record was successfully created" }]' doc:name="response message" doc:id="6137c563-e585-4c7b-ad5b-62a80d07ccdc" />
+    </flow>
+</mule>

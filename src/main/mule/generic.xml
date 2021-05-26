@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<sub-flow name="person-by-personID-not-empty-validation" doc:id="7efec8dd-8997-4b51-9e04-fb9d15801212" >
+		<flow-ref doc:name="select-by-personID" doc:id="a00d0b3f-d9d9-4c8e-9d8c-13c04106cdeb" name="database.PERSON-select-by-personID" />
+		<validation:is-false doc:name="check if payload is not empty" doc:id="1afd19b1-940a-4d67-8daa-b51f2e21207b" expression="#[isEmpty(payload)]" message='#["There is no person with this id: " ++ vars.personID]' />
+	</sub-flow>
+	<sub-flow name="person-by-personID-empty-validation" doc:id="b5197f47-f8c1-46cb-a2c8-9b122efd5e56">
+		<flow-ref doc:name="select-by-personID" doc:id="50c24421-7ae5-494f-9515-57347f526fb8" name="database.PERSON-select-by-personID" />
+		<validation:is-true doc:name="check if payload is empty" doc:id="3932e8cc-8ec5-473e-9e06-afe42f8eec4d" expression="#[isEmpty(payload)]" message='#["This is incorrect (already exist) id: " ++ vars.personID]'/>
+	</sub-flow>
+	<sub-flow name="visa-by-personID-visaID-not-empty-validation" doc:id="06d55c08-5646-46bf-bccb-d36638bef6a0" >
+		<flow-ref doc:name="select-by-personID-visaID" doc:id="92ea0718-bdf2-42a7-9af3-6883cd3fe898" name="database.PERSON_NONIMMIGRANT_VISA_CATEGORIES-select-by-personID-visaID" />
+		<validation:is-false doc:name="check if payload is not empty" doc:id="6819f6e8-2170-4e3a-a007-553792999fa4" message='#["There is no visa: " ++ vars.visaID ++ " information for this person id: " ++ vars.personID]' expression="#[isEmpty(payload)]"/>
+	</sub-flow>
+	<sub-flow name="visa-by-personID-not-empty-validation" doc:id="d198eea1-de62-4646-86e3-0a416cffe96a" >
+		<flow-ref doc:name="select-by-personID-visaID" doc:id="708bfb83-65af-401a-b45b-393b0eae35ee" name="database.NON_IMMIGRANT_VISA_CATEGORIES-select-by-categoryID" />
+		<validation:is-false doc:name="check if payload is not empty" doc:id="be796a9c-0422-4add-b6c0-12dbda6f387d" expression="#[isEmpty(payload)]" message='#["There is no such visa to activate: " ++ vars.visaID]' />
+	</sub-flow>
+</mule>

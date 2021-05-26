@@ -1,0 +1,25 @@
+#%RAML 1.0 Trait
+
+responses:
+  400:
+    description: Bad request
+    body:
+      application/json:
+        type: object
+        # here is must be a type: libraries/data_types/entity_error.raml
+        example: !include ../../examples/errors/400_error_response.json
+  
+  401:
+    description: Unauthorized
+    body:
+      application/json:
+        type: object
+        example: !include ../../examples/errors/401_error_response.json
+    
+  500:
+    description: Internal Error Server
+    body:
+      application/json:
+        type: object
+        example: !include ../../examples/errors/500_error_response.json
+        
