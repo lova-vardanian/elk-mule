@@ -1,23 +1,76 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
 	<sub-flow name="person-by-personID-not-empty-validation" doc:id="7efec8dd-8997-4b51-9e04-fb9d15801212" >
 		<flow-ref doc:name="select-by-personID" doc:id="a00d0b3f-d9d9-4c8e-9d8c-13c04106cdeb" name="database.PERSON-select-by-personID" />
-		<validation:is-false doc:name="check if payload is not empty" doc:id="1afd19b1-940a-4d67-8daa-b51f2e21207b" expression="#[isEmpty(payload)]" message='#["There is no person with this id: " ++ vars.personID]' />
+		<try doc:name="Try" doc:id="3d695ab8-ab95-4cc2-b562-d924ee4a47a7" >
+			<validation:is-false doc:name="check if payload is not empty" doc:id="1afd19b1-940a-4d67-8daa-b51f2e21207b" expression="#[isEmpty(payload)]" message='#["There is no person with this id: " ++ vars.personID]' />
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="962051ac-fe18-4658-b969-baec74466400" >
+					<json-logger:logger doc:name="ERROR: payload" doc:id="d780bcd8-c558-4335-bd20-621992c97c23" config-ref="JSON_Logger_Config" message="#[output application/json --- error.detailedDescription]" priority="ERROR" >
+						<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(payload),
+    error: JSONLoggerModule::stringifyNonJSON(error)
+}]]]></json-logger:content>
+					</json-logger:logger>
+				</on-error-propagate>
+			</error-handler>
+		</try>
 	</sub-flow>
 	<sub-flow name="person-by-personID-empty-validation" doc:id="b5197f47-f8c1-46cb-a2c8-9b122efd5e56">
 		<flow-ref doc:name="select-by-personID" doc:id="50c24421-7ae5-494f-9515-57347f526fb8" name="database.PERSON-select-by-personID" />
-		<validation:is-true doc:name="check if payload is empty" doc:id="3932e8cc-8ec5-473e-9e06-afe42f8eec4d" expression="#[isEmpty(payload)]" message='#["This is incorrect (already exist) id: " ++ vars.personID]'/>
+		<try doc:name="Try" doc:id="bb091580-d41b-48e8-a6f5-2ba4ef4aa106" >
+			<validation:is-true doc:name="check if payload is empty" doc:id="3932e8cc-8ec5-473e-9e06-afe42f8eec4d" expression="#[isEmpty(payload)]" message='#["This is incorrect (already exist) id: " ++ vars.personID]' />
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e4aebe8c-b276-4dcd-8714-d8b74d2ad00a" >
+					<json-logger:logger doc:name="ERROR: payload" doc:id="34bb1fe0-7726-4302-bdf5-8f0c31d9cbf3" config-ref="JSON_Logger_Config" message="#[output application/json --- error.detailedDescription]" priority="ERROR">
+						<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(payload),
+    error: JSONLoggerModule::stringifyNonJSON(error)
+}]]]></json-logger:content>
+					</json-logger:logger>
+				</on-error-propagate>
+			</error-handler>
+		</try>
 	</sub-flow>
 	<sub-flow name="visa-by-personID-visaID-not-empty-validation" doc:id="06d55c08-5646-46bf-bccb-d36638bef6a0" >
 		<flow-ref doc:name="select-by-personID-visaID" doc:id="92ea0718-bdf2-42a7-9af3-6883cd3fe898" name="database.PERSON_NONIMMIGRANT_VISA_CATEGORIES-select-by-personID-visaID" />
-		<validation:is-false doc:name="check if payload is not empty" doc:id="6819f6e8-2170-4e3a-a007-553792999fa4" message='#["There is no visa: " ++ vars.visaID ++ " information for this person id: " ++ vars.personID]' expression="#[isEmpty(payload)]"/>
+		<try doc:name="Try" doc:id="6d358baa-1f9a-49e7-971e-cfed2935a0bf" >
+			<validation:is-false doc:name="check if payload is not empty" doc:id="6819f6e8-2170-4e3a-a007-553792999fa4" message='#["There is no visa: " ++ vars.visaID ++ " information for this person id: " ++ vars.personID]' expression="#[isEmpty(payload)]" />
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="f6785037-3f3b-45f8-9b3a-3bee5f487d7c" >
+					<json-logger:logger doc:name="ERROR: payload" doc:id="83ca8189-e9ce-44d0-9155-a3e702778647" config-ref="JSON_Logger_Config" message="#[output application/json --- error.detailedDescription]" priority="ERROR">
+						<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(payload),
+    error: JSONLoggerModule::stringifyNonJSON(error) 
+}]]]></json-logger:content>
+					</json-logger:logger>
+				</on-error-propagate>
+			</error-handler>
+		</try>
 	</sub-flow>
 	<sub-flow name="visa-by-personID-not-empty-validation" doc:id="d198eea1-de62-4646-86e3-0a416cffe96a" >
 		<flow-ref doc:name="select-by-personID-visaID" doc:id="708bfb83-65af-401a-b45b-393b0eae35ee" name="database.NON_IMMIGRANT_VISA_CATEGORIES-select-by-categoryID" />
-		<validation:is-false doc:name="check if payload is not empty" doc:id="be796a9c-0422-4add-b6c0-12dbda6f387d" expression="#[isEmpty(payload)]" message='#["There is no such visa to activate: " ++ vars.visaID]' />
+		<try doc:name="Try" doc:id="24bed0b8-bfa2-4517-995f-98305829ad19" >
+			<validation:is-false doc:name="check if payload is not empty" doc:id="be796a9c-0422-4add-b6c0-12dbda6f387d" expression="#[isEmpty(payload)]" message='#["There is no such visa to activate: " ++ vars.visaID]' />
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="6d4ba65b-64f5-4cf2-86dc-836a4282ddb7" >
+					<json-logger:logger doc:name="ERROR: payload" doc:id="1c13d0d2-2e7c-4b5f-a274-43562ee24f28" config-ref="JSON_Logger_Config" message="#[output application/json --- error.detailedDescription]" priority="ERROR">
+						<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(payload),
+    error: JSONLoggerModule::stringifyNonJSON(error) 
+}]]]></json-logger:content>
+					</json-logger:logger>
+				</on-error-propagate>
+			</error-handler>
+		</try>
 	</sub-flow>
 </mule>

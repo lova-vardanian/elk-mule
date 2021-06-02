@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
     <apikit:config name="elk-mule-config" api="elk-mule.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
 	<flow name="elk-mule-main">
         <http:listener path="/api/*" config-ref="HTTP_Listener_config">
@@ -93,42 +94,19 @@ output application/json
             </on-error-propagate>
         </error-handler>
     </flow>
-    <flow name="elk-mule-console">
-        <http:listener path="/console/*" config-ref="HTTP_Listener_config">
-            <http:response statusCode="#[vars.httpStatus default 200]">
-                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
-            </http:response>
-            <http:error-response statusCode="#[vars.httpStatus default 500]">
-                <http:body><![CDATA[#[payload]]]></http:body>
-                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
-            </http:error-response>
-        </http:listener>
-        <apikit:console config-ref="elk-mule-config" />
-        <error-handler>
-            <on-error-propagate type="APIKIT:NOT_FOUND">
-                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-                    <ee:message>
-                        <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{message: "Resource not found"}]]></ee:set-payload>
-                    </ee:message>
-                    <ee:variables>
-                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
-                    </ee:variables>
-                </ee:transform>
-            </on-error-propagate>
-        </error-handler>
-    </flow>
     <flow name="get:\person\(personID):elk-mule-config">
         <set-variable value="#[attributes.uriParams.'personID']" doc:name="personID" doc:id="86c523dd-3df2-40f7-9be2-22839135fbd5" variableName="personID" />
         <flow-ref doc:name="person-validation" doc:id="1e3716b4-956b-4bb2-a5d1-2ac1d18e57ef" name="person-by-personID-not-empty-validation" />
+		<set-variable value='#["successfully returned person information"]' doc:name="logMessage" doc:id="1cdb13ce-d1c5-4937-872a-77c6ed7373b8" variableName="logMessage"/>
+		<flow-ref doc:name="logger logMessage template" doc:id="66ae5826-dcc7-417d-8221-e56915f51ca9" name="logger-logMessage-template"/>
     </flow>
     <flow name="get:\person\(personID)\visa\(visaID):elk-mule-config">
         <set-variable value="#[attributes.uriParams.'personID']" doc:name="personID" doc:id="9c16dd0d-8611-4ad0-a19b-bd830ccaf95b" variableName="personID" />
         <set-variable value="#[attributes.uriParams.'visaID']" doc:name="visaID" doc:id="377f7261-3939-41f3-a23b-dabca589f36f" variableName="visaID" />
         <flow-ref doc:name="person-validation" doc:id="4e80d8e2-865e-4bc8-9378-da7e7948c924" name="person-by-personID-not-empty-validation" />
         <flow-ref doc:name="visa-validation" doc:id="e2687ff5-ec31-49a4-b021-3d03605e62d3" name="visa-by-personID-visaID-not-empty-validation" />
+		<set-variable value='#["successfully returned visa information"]' doc:name="logMessage" doc:id="e1cb9037-05a3-44a4-9512-b064877d445b" variableName="logMessage" />
+		<flow-ref doc:name="logger logMessage template" doc:id="cdd49607-7024-42a8-9ef9-1606d511374c" name="logger-logMessage-template" />
     </flow>
     <flow name="post:\person:application\json:elk-mule-config">
         <set-variable value="#[payload.'id']" doc:name="personID" doc:id="6bfea7ec-da84-4243-ad9e-296b90d6b6dd" variableName="personID" />
@@ -137,6 +115,8 @@ output application/json
         <set-payload value="#[vars.personPayload]" doc:name="personPayload" doc:id="1df5dccc-8f44-45de-9e26-ba95cfb877b3" />
 		<flow-ref doc:name="insert new porson" doc:id="ba7ea407-47d3-4673-aa23-43a091bd3bb9" name="database.PERSON-insert" />
 		<set-payload value='#[output application/json --- { "status": "new record was successfully created" }]' doc:name="response message" doc:id="e6ca4688-a052-4b03-a688-7641f1fc3723" />
+		<set-variable value='#[payload]' doc:name="logMessage" doc:id="6f11d3a0-77b6-43eb-b4ec-3b3887bd3b2c" variableName="logMessage" />
+		<flow-ref doc:name="logger logMessage template" doc:id="e3b85352-0b71-429b-acfd-e028ba97b88c" name="logger-logMessage-template" />
     </flow>
     <flow name="post:\person\(personID)\visa:application\json:elk-mule-config">
         <set-variable value="#[payload.'personID']" doc:name="personID" doc:id="7b75b2ce-fb5a-4e3f-bd5a-8fcc3b8ab42c" variableName="personID" />
@@ -147,5 +127,10 @@ output application/json
         <set-payload value="#[vars.personPayload]" doc:name="personPayload" doc:id="0533677b-71f1-4bf6-8cbf-134f2ca6a82f" />
 		<flow-ref doc:name="insert new visa for person" doc:id="7bdfe7a1-1378-4ad9-8b53-9adf56ba8939" name="database.PERSON_NONIMMIGRANT_VISA_CATEGORIES-select-by-personID-visaID" />
 		<set-payload value='#[output application/json --- { "status": "new record was successfully created" }]' doc:name="response message" doc:id="6137c563-e585-4c7b-ad5b-62a80d07ccdc" />
+		<set-variable value="#[payload]" doc:name="logMessage" doc:id="7ef945e6-4ba5-416f-92c4-c113ad32abf1" variableName="logMessage" />
+		<flow-ref doc:name="logger logMessage template" doc:id="474f7daf-3600-43bd-82fc-8bbfc8b496d4" name="logger-logMessage-template" />
     </flow>
+	<sub-flow name="logger-logMessage-template" doc:id="04c3ac51-1349-408c-a05d-47bfc547aac6" >
+		<json-logger:logger doc:name="Logger" doc:id="90af84ed-0da1-46eb-8261-abf56f314850" config-ref="JSON_Logger_Config" message="#[vars.logMessage]" />
+	</sub-flow>
 </mule>
