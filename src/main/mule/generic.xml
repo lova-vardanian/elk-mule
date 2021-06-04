@@ -11,13 +11,7 @@ http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/m
 			<validation:is-false doc:name="check if payload is not empty" doc:id="1afd19b1-940a-4d67-8daa-b51f2e21207b" expression="#[isEmpty(payload)]" message='#["There is no person with this id: " ++ vars.personID]' />
 			<error-handler >
 				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="962051ac-fe18-4658-b969-baec74466400" >
-					<json-logger:logger doc:name="ERROR: payload" doc:id="d780bcd8-c558-4335-bd20-621992c97c23" config-ref="JSON_Logger_Config" message="#[output application/json --- error.detailedDescription]" priority="ERROR" >
-						<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
-{
-    payload: JSONLoggerModule::stringifyNonJSON(payload),
-    error: JSONLoggerModule::stringifyNonJSON(error)
-}]]]></json-logger:content>
-					</json-logger:logger>
+					<flow-ref doc:name="logger error template" doc:id="d77fb2e4-133f-4965-abb6-eefb03dede20" name="logger-error-template"/>
 				</on-error-propagate>
 			</error-handler>
 		</try>
@@ -28,13 +22,7 @@ http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/m
 			<validation:is-true doc:name="check if payload is empty" doc:id="3932e8cc-8ec5-473e-9e06-afe42f8eec4d" expression="#[isEmpty(payload)]" message='#["This is incorrect (already exist) id: " ++ vars.personID]' />
 			<error-handler >
 				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e4aebe8c-b276-4dcd-8714-d8b74d2ad00a" >
-					<json-logger:logger doc:name="ERROR: payload" doc:id="34bb1fe0-7726-4302-bdf5-8f0c31d9cbf3" config-ref="JSON_Logger_Config" message="#[output application/json --- error.detailedDescription]" priority="ERROR">
-						<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
-{
-    payload: JSONLoggerModule::stringifyNonJSON(payload),
-    error: JSONLoggerModule::stringifyNonJSON(error)
-}]]]></json-logger:content>
-					</json-logger:logger>
+					<flow-ref doc:name="logger error template" doc:id="67a48574-535b-40d0-8b31-f371a7a4be84" name="logger-error-template"/>
 				</on-error-propagate>
 			</error-handler>
 		</try>
@@ -45,13 +33,7 @@ http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/m
 			<validation:is-false doc:name="check if payload is not empty" doc:id="6819f6e8-2170-4e3a-a007-553792999fa4" message='#["There is no visa: " ++ vars.visaID ++ " information for this person id: " ++ vars.personID]' expression="#[isEmpty(payload)]" />
 			<error-handler >
 				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="f6785037-3f3b-45f8-9b3a-3bee5f487d7c" >
-					<json-logger:logger doc:name="ERROR: payload" doc:id="83ca8189-e9ce-44d0-9155-a3e702778647" config-ref="JSON_Logger_Config" message="#[output application/json --- error.detailedDescription]" priority="ERROR">
-						<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
-{
-    payload: JSONLoggerModule::stringifyNonJSON(payload),
-    error: JSONLoggerModule::stringifyNonJSON(error) 
-}]]]></json-logger:content>
-					</json-logger:logger>
+					<flow-ref doc:name="logger error template" doc:id="138e4ed9-4b1d-4256-bc47-cd5671e3cb5a" name="logger-error-template"/>
 				</on-error-propagate>
 			</error-handler>
 		</try>
@@ -62,15 +44,25 @@ http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/m
 			<validation:is-false doc:name="check if payload is not empty" doc:id="be796a9c-0422-4add-b6c0-12dbda6f387d" expression="#[isEmpty(payload)]" message='#["There is no such visa to activate: " ++ vars.visaID]' />
 			<error-handler >
 				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="6d4ba65b-64f5-4cf2-86dc-836a4282ddb7" >
-					<json-logger:logger doc:name="ERROR: payload" doc:id="1c13d0d2-2e7c-4b5f-a274-43562ee24f28" config-ref="JSON_Logger_Config" message="#[output application/json --- error.detailedDescription]" priority="ERROR">
-						<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
-{
-    payload: JSONLoggerModule::stringifyNonJSON(payload),
-    error: JSONLoggerModule::stringifyNonJSON(error) 
-}]]]></json-logger:content>
-					</json-logger:logger>
+					<flow-ref doc:name="logger error template" doc:id="ff6822b1-293d-45ca-a316-bec77a8c68b5" name="logger-error-template"/>
 				</on-error-propagate>
 			</error-handler>
 		</try>
+	</sub-flow>
+	<sub-flow name="logger-error-template" doc:id="7fab39a2-541f-47cc-bf36-511858db2b54" >
+		<json-logger:logger doc:name="ERROR" doc:id="1c13d0d2-2e7c-4b5f-a274-43562ee24f28" config-ref="JSON_Logger_Config" message="#[output application/json --- error.detailedDescription]" priority="ERROR">
+						<json-logger:content><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: JSONLoggerModule::stringifyNonJSON(payload),
+    error: {
+		description: error.description default null,
+		detailedDescription: error.detailedDescription default null,
+		errorType: error.errorType.asString default null,
+		muleMessage: error.muleMessage default null,
+		exception: error.exception.message default null
+		
+	}
+}]]]></json-logger:content>
+					</json-logger:logger>
 	</sub-flow>
 </mule>
